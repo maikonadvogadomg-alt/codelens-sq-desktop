@@ -2,16 +2,28 @@ name: Build Desktop Apps
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
   workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact-name: codelens-linux
+            artifact-path: dist-electron/*.AppImage
+          - os: windows-latest
+            artifact-name: codelens-windows
+            artifact-path: dist-electron/*.exe
+          - os: macos-latest
+            artifact-name: codelens-mac
+            artifact-path: dist-electron/*.dmg
+    
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -21,35 +33,52 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build desktop app
+      - name: Build web app (Vite)
         run: npm run build
         env:
+          NODE_ENV: production
+
+      - name: Build server (Node.js)
+        run: npm run build:server
+        env:
+          NODE_ENV: production
+
+      - name: Build Electron app
+        run: npm run electron:build
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: production
 
-      - name: Upload artifacts (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Check build output
+        run: |
+          if [ -d "dist-electron" ]; then
+            echo "✅ Build directory found"
+            ls -lh dist-electron/
+          else
+            echo "❌ Build directory not found!"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: codelens-sq-linux
-          path: dist/*.AppImage
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}
           retention-days: 30
+          if-no-files-found: error
 
-      - name: Upload artifacts (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
         with:
-          name: codelens-sq-windows
-          path: dist/*.exe
-          retention-days: 30
-
-      - name: Upload artifacts (Mac)
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: codelens-sq-mac
-          path: dist/*.dmg
-          retention-days: 30
+          files: ${{ matrix.artifact-path }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
