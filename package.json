@@ -43,7 +43,7 @@
           ]
         }
       ],
-      "icon": "icon.icns",
+      "icon": "icon.icons",
       "category": "public.app-category.utilities"
     },
     "linux": {
