@@ -1,22 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "composite": true,
+    "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
     "strict": true,
-    "noEmit": true,
-    "jsx": "preserve",
-    "lib": ["esnext", "dom", "dom.iterable"],
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "types": ["node", "vite/client"],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "target": "ES2020"
   },
-  "include": ["src/**/*", "server/**/*", "lib/**/*", "api/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["electron/**/*", "server.ts", "vite.config.ts"]
 }
