@@ -48,6 +48,18 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Verify build files
+        run: |
+          echo "📁 Checking dist/ directory..."
+          ls -lh dist/ || echo "❌ dist/ not found"
+          echo ""
+          echo "📁 Checking electron/ directory..."
+          ls -lh electron/ || echo "❌ electron/ not found"
+          echo ""
+          echo "📁 Checking dist-server/ directory..."
+          ls -lh dist-server/ || echo "❌ dist-server/ not found"
+        shell: bash
+
       - name: Build Electron app
         run: npm run electron:build
         env:
@@ -56,11 +68,12 @@ jobs:
 
       - name: Check build output
         run: |
+          echo "✅ Build completed. Checking output..."
           if [ -d "dist-electron" ]; then
-            echo "✅ Build directory found"
+            echo "✅ dist-electron directory found"
             ls -lh dist-electron/
           else
-            echo "❌ Build directory not found!"
+            echo "❌ dist-electron not found!"
             exit 1
           fi
         shell: bash
